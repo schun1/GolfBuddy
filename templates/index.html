@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Swing Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            margin-bottom: 30px;
+        }
+
+        .video-slot {
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .upload-box {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9ff;
+            height: 550px;
+            aspect-ratio: 14 / 16;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .upload-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 16px;
+        }
+
+        .upload-btn:hover {
+            background: #5568d3;
+        }
+
+        .process-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+
+        .process-btn:hover {
+            background: #38a169;
+        }
+
+        .process-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .video-container {
+            background: #1a202c;
+            border-radius: 8px;
+            padding: 20px;
+            height: 550px;
+            aspect-ratio: 14 / 16;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-container h3 {
+            margin-bottom: 15px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .video-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            border-radius: 5px;
+            background: black;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: move;
+            transition: none;
+        }
+
+        video.dragging {
+            cursor: grabbing;
+        }
+
+        .video-controls {
+            margin-top: 15px;
+            padding: 15px;
+            background: #2d3748;
+            border-radius: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .rotate-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .zoom-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .rotate-btn, .zoom-btn {
+            padding: 8px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .rotate-btn:hover, .zoom-btn:hover {
+            background: #5568d3;
+        }
+
+        .zoom-label {
+            color: white;
+            font-size: 12px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .speed-control label {
+            min-width: 80px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .speed-value {
+            min-width: 50px;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .controls {
+            background: #2d3748;
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .play-btn {
+            background: #48bb78;
+            color: white;
+        }
+
+        .play-btn:hover {
+            background: #38a169;
+        }
+
+        .pause-btn {
+            background: #ed8936;
+            color: white;
+        }
+
+        .pause-btn:hover {
+            background: #dd6b20;
+        }
+
+        .reset-btn {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #c53030;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .video-rotate-0 {
+            transform: rotate(0deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-rotate-90 {
+            transform: rotate(90deg);
+            width: 177.78%;
+            height: 177.78%;
+        }
+
+        .video-rotate-180 {
+            transform: rotate(180deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-rotate-270 {
+            transform: rotate(270deg);
+            width: 177.78%;
+            height: 177.78%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Golf Swing Analyzer</h1>
+
+        <div class="video-grid">
+            <!-- Video Slot 1 -->
+            <div class="video-slot">
+                <div class="upload-box" id="upload-box-1">
+                    <h3>Video 1</h3>
+                    <label for="video1-input" class="upload-btn">Choose Video</label>
+                    <input type="file" id="video1-input" accept="video/*">
+                    <div class="status" id="video1-filename"></div>
+                    <button class="process-btn" id="process1-btn" disabled>Process Video</button>
+                    <div class="status" id="video1-status"></div>
+                </div>
+
+                <div class="video-container hidden" id="video-container-1">
+                    <h3>Video 1</h3>
+                    <div class="video-wrapper">
+                        <video id="video1" class="video-rotate-0" controls></video>
+                    </div>
+                    <div class="video-controls">
+                        <div class="control-group rotate-buttons">
+                            <button class="rotate-btn" onclick="rotateVideo('video1', -90)">↺ 90°</button>
+                            <button class="rotate-btn" onclick="rotateVideo('video1', 90)">↻ 90°</button>
+                        </div>
+                        <div class="control-group zoom-buttons">
+                            <button class="zoom-btn" onclick="zoomVideo('video1', -0.1)">−</button>
+                            <span class="zoom-label" id="zoom1-label">100%</span>
+                            <button class="zoom-btn" onclick="zoomVideo('video1', 0.1)">+</button>
+                        </div>
+                        <div class="control-group" style="display: flex; gap: 8px; justify-content: center;">
+                            <button class="play-btn" onclick="togglePlayVideo('video1')">Play</button>
+                            <button class="pause-btn" onclick="document.getElementById('video1').pause()">Pause</button>
+                            <button class="rotate-btn" onclick="setStartPoint('video1')">Set Start</button>
+                        </div>
+                        <div class="control-group speed-control">
+                            <label>Speed:</label>
+                            <input type="range" id="speed1-slider" min="0.25" max="2" step="0.25" value="1">
+                            <span class="speed-value" id="speed1-value">1.0x</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Slot 2 -->
+            <div class="video-slot">
+                <div class="upload-box" id="upload-box-2">
+                    <h3>Video 2</h3>
+                    <label for="video2-input" class="upload-btn">Choose Video</label>
+                    <input type="file" id="video2-input" accept="video/*">
+                    <div class="status" id="video2-filename"></div>
+                    <button class="process-btn" id="process2-btn" disabled>Process Video</button>
+                    <div class="status" id="video2-status"></div>
+                </div>
+
+                <div class="video-container hidden" id="video-container-2">
+                    <h3>Video 2</h3>
+                    <div class="video-wrapper">
+                        <video id="video2" class="video-rotate-0" controls></video>
+                    </div>
+                    <div class="video-controls">
+                        <div class="control-group rotate-buttons">
+                            <button class="rotate-btn" onclick="rotateVideo('video2', -90)">↺ 90°</button>
+                            <button class="rotate-btn" onclick="rotateVideo('video2', 90)">↻ 90°</button>
+                        </div>
+                        <div class="control-group zoom-buttons">
+                            <button class="zoom-btn" onclick="zoomVideo('video2', -0.1)">−</button>
+                            <span class="zoom-label" id="zoom2-label">100%</span>
+                            <button class="zoom-btn" onclick="zoomVideo('video2', 0.1)">+</button>
+                        </div>
+                        <div class="control-group" style="display: flex; gap: 8px; justify-content: center;">
+                            <button class="play-btn" onclick="togglePlayVideo('video2')">Play</button>
+                            <button class="pause-btn" onclick="document.getElementById('video2').pause()">Pause</button>
+                            <button class="rotate-btn" onclick="setStartPoint('video2')">Set Start</button>
+                        </div>
+                        <div class="control-group speed-control">
+                            <label>Speed:</label>
+                            <input type="range" id="speed2-slider" min="0.25" max="2" step="0.25" value="1">
+                            <span class="speed-value" id="speed2-value">1.0x</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <button class="play-btn" id="play-btn">Play Both</button>
+                <button class="pause-btn" id="pause-btn">Pause Both</button>
+                <button class="reset-btn" id="reset-btn">Reset Both</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Track rotation for each video
+        let video1Rotation = 0;
+        let video2Rotation = 0;
+
+        // Track video position
+        const videoPositions = {
+            video1: { x: 0, y: 0 },
+            video2: { x: 0, y: 0 }
+        };
+
+        // Track video zoom
+        const videoZoom = {
+            video1: 1.0,
+            video2: 1.0
+        };
+
+        // Track start points for sync
+        const videoStartPoints = {
+            video1: 0,
+            video2: 0
+        };
+
+        // Drag functionality
+        let isDragging = false;
+        let currentVideo = null;
+        let startX, startY, startPosX, startPosY;
+
+        function setupVideoDrag(videoId) {
+            const video = document.getElementById(videoId);
+
+            video.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                currentVideo = videoId;
+                video.classList.add('dragging');
+
+                startX = e.clientX;
+                startY = e.clientY;
+                startPosX = videoPositions[videoId].x;
+                startPosY = videoPositions[videoId].y;
+
+                e.preventDefault();
+            });
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging || !currentVideo) return;
+
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            videoPositions[currentVideo].x = startPosX + deltaX;
+            videoPositions[currentVideo].y = startPosY + deltaY;
+
+            updateVideoPosition(currentVideo);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (currentVideo) {
+                document.getElementById(currentVideo).classList.remove('dragging');
+            }
+            isDragging = false;
+            currentVideo = null;
+        });
+
+        function updateVideoPosition(videoId) {
+            const video = document.getElementById(videoId);
+            const pos = videoPositions[videoId];
+            const zoom = videoZoom[videoId];
+            const rotation = videoId === 'video1' ? video1Rotation : video2Rotation;
+            video.style.transform = `translate(${pos.x}px, ${pos.y}px) rotate(${rotation}deg) scale(${zoom})`;
+        }
+
+        // Zoom video function
+        function zoomVideo(videoId, delta) {
+            videoZoom[videoId] = Math.max(0.5, Math.min(3.0, videoZoom[videoId] + delta));
+
+            // Update zoom label
+            const labelId = videoId === 'video1' ? 'zoom1-label' : 'zoom2-label';
+            document.getElementById(labelId).textContent = `${Math.round(videoZoom[videoId] * 100)}%`;
+
+            // Update video transform
+            updateVideoPosition(videoId);
+        }
+
+        // Toggle play for individual video
+        function togglePlayVideo(videoId) {
+            const video = document.getElementById(videoId);
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+
+        // Set start point for video sync
+        function setStartPoint(videoId) {
+            const video = document.getElementById(videoId);
+            videoStartPoints[videoId] = video.currentTime;
+
+            // Visual feedback
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✓ Set!';
+            button.style.background = '#48bb78';
+
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '#667eea';
+            }, 1000);
+        }
+
+        // Rotate video function
+        function rotateVideo(videoId, degrees) {
+            const video = document.getElementById(videoId);
+
+            // Update rotation based on video
+            if (videoId === 'video1') {
+                video1Rotation = (video1Rotation + degrees) % 360;
+                if (video1Rotation < 0) video1Rotation += 360;
+            } else {
+                video2Rotation = (video2Rotation + degrees) % 360;
+                if (video2Rotation < 0) video2Rotation += 360;
+            }
+
+            const currentRotation = videoId === 'video1' ? video1Rotation : video2Rotation;
+
+            // Remove all rotation classes
+            video.classList.remove('video-rotate-0', 'video-rotate-90', 'video-rotate-180', 'video-rotate-270');
+
+            // Add the appropriate rotation class
+            video.classList.add(`video-rotate-${currentRotation}`);
+
+            // Update position to maintain drag offset
+            updateVideoPosition(videoId);
+        }
+
+        // Upload handlers
+        const video1Input = document.getElementById('video1-input');
+        const video2Input = document.getElementById('video2-input');
+        const process1Btn = document.getElementById('process1-btn');
+        const process2Btn = document.getElementById('process2-btn');
+
+        let video1File = null;
+        let video2File = null;
+
+        video1Input.addEventListener('change', (e) => {
+            video1File = e.target.files[0];
+            document.getElementById('video1-filename').textContent = video1File.name;
+            process1Btn.disabled = false;
+        });
+
+        video2Input.addEventListener('change', (e) => {
+            video2File = e.target.files[0];
+            document.getElementById('video2-filename').textContent = video2File.name;
+            process2Btn.disabled = false;
+        });
+
+        async function uploadAndProcess(file, statusElement, videoElement, processBtn, uploadBoxId, videoContainerId) {
+            const formData = new FormData();
+            formData.append('video', file);
+
+            statusElement.textContent = 'Uploading and processing...';
+            processBtn.disabled = true;
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const data = await response.json();
+
+                // Hide upload box and show video player
+                document.getElementById(uploadBoxId).classList.add('hidden');
+                document.getElementById(videoContainerId).classList.remove('hidden');
+
+                // Set video source
+                videoElement.src = `/video/${data.output_filename}`;
+                videoElement.load();
+
+                // Setup drag functionality for this video
+                setupVideoDrag(videoElement.id);
+
+                return data.output_filename;
+            } catch (error) {
+                statusElement.textContent = `Error: ${error.message}`;
+                processBtn.disabled = false;
+                throw error;
+            }
+        }
+
+        process1Btn.addEventListener('click', async () => {
+            const video1Element = document.getElementById('video1');
+            const status = document.getElementById('video1-status');
+            await uploadAndProcess(video1File, status, video1Element, process1Btn, 'upload-box-1', 'video-container-1');
+        });
+
+        process2Btn.addEventListener('click', async () => {
+            const video2Element = document.getElementById('video2');
+            const status = document.getElementById('video2-status');
+            await uploadAndProcess(video2File, status, video2Element, process2Btn, 'upload-box-2', 'video-container-2');
+        });
+
+        // Playback controls
+        const video1Player = document.getElementById('video1');
+        const video2Player = document.getElementById('video2');
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Individual speed controls
+        const speed1Slider = document.getElementById('speed1-slider');
+        const speed1Value = document.getElementById('speed1-value');
+        const speed2Slider = document.getElementById('speed2-slider');
+        const speed2Value = document.getElementById('speed2-value');
+
+        speed1Slider.addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            video1Player.playbackRate = speed;
+            speed1Value.textContent = `${speed.toFixed(2)}x`;
+        });
+
+        speed2Slider.addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            video2Player.playbackRate = speed;
+            speed2Value.textContent = `${speed.toFixed(2)}x`;
+        });
+
+        playBtn.addEventListener('click', () => {
+            // Reset to start points and play both
+            if (video1Player.src) {
+                video1Player.currentTime = videoStartPoints.video1;
+                video1Player.play();
+            }
+            if (video2Player.src) {
+                video2Player.currentTime = videoStartPoints.video2;
+                video2Player.play();
+            }
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            if (video1Player.src) video1Player.pause();
+            if (video2Player.src) video2Player.pause();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            // Reset to saved start points
+            if (video1Player.src) {
+                video1Player.currentTime = videoStartPoints.video1;
+                video1Player.pause();
+            }
+            if (video2Player.src) {
+                video2Player.currentTime = videoStartPoints.video2;
+                video2Player.pause();
+            }
+        });
+
+        // Removed auto-sync on seek - videos can now be controlled independently
+    </script>
+</body>
+</html>

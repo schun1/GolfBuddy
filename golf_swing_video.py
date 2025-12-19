@@ -103,7 +103,7 @@ def main():
     processor = GolfSwingProcessor()
     
     # Replace with your video path
-    video_path = "IMG_0231.mp4"
+    video_path = "Daddy_driver_front.mp4"
     
     # Load video
     total_frames, width, height = processor.load_video(video_path)
