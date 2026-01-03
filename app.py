@@ -265,5 +265,5 @@ def get_video(filename):
     return send_file(video_path, mimetype='video/mp4')
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 8899))
     app.run(host='0.0.0.0', port=port, debug=False)
